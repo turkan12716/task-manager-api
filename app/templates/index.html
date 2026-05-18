@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager API UI</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .card { background: #ffffff; border: 1px solid #e1e4e8; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 8px 18px rgba(27, 39, 51, 0.04); }
+        h1 { margin: 0 0 8px; font-size: 28px; }
+        h2 { margin: 0 0 12px; font-size: 22px; }
+        p { margin: 0; color: #666; line-height: 1.5; }
+        form { display: grid; gap: 10px; margin-top: 15px; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        button { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-primary { background-color: #0056b3; color: white; }
+        .btn-secondary { background-color: #f0f0f0; color: #333; margin-left: 5px; }
+        .btn-danger { background-color: #dc3545; color: white; padding: 6px 12px; font-size: 14px; }
+        .btn-success { background-color: white; color: #333; border: 1px solid #ccc; padding: 6px 12px; font-size: 14px; border-radius: 6px; }
+        .btn-success:hover { background-color: #f8f9fa; }
+        
+        /* Task List Styling */
+        .task-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; border: 1px solid #e1e4e8; border-radius: 8px; margin-bottom: 10px; background: #fff; }
+        .task-item:last-child { margin-bottom: 0; }
+        .task-title { font-size: 16px; font-weight: bold; margin-bottom: 4px; }
+        .task-desc { color: #555; font-size: 14px; margin-bottom: 6px; }
+        .task-meta { color: #888; font-size: 12px; }
+        .task-actions { display: flex; gap: 8px; }
+
+        /* API Reference Documentation Styling */
+        .api-route { background: #fff; border: 1px solid #e1e4e8; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+        .api-route:last-child { margin-bottom: 0; }
+        .route-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-family: monospace; font-size: 16px; }
+        .badge { padding: 4px 8px; border-radius: 4px; color: white; font-weight: bold; font-size: 12px; font-family: sans-serif; }
+        .badge-get { background: #157347; }
+        .badge-post { background: #0b5ed7; }
+        .badge-put { background: #6f42c1; }
+        .badge-patch { background: #d3ad7f; color: #333; border: 1px solid #bb9466; }
+        .badge-delete { background: #bb2d3b; }
+        
+        .route-detail { font-size: 14px; margin-bottom: 6px; color: #333; }
+        .route-detail strong { color: #000; }
+        pre { background: #f8f9fa; border: 1px solid #e1e4e8; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 13px; color: #212529; overflow-x: auto; margin: 8px 0 0 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    
+    <div class="card">
+        <h1>Task Manager API UI</h1>
+        <p>Use this page to call the API in real time from the browser.</p>
+        <form id="taskForm">
+            <input type="text" id="taskTitle" placeholder="Task title (required)" required>
+            <textarea id="taskDesc" placeholder="Description (optional)" rows="3"></textarea>
+            <div>
+                <button type="submit" class="btn-primary">Create Task</button>
+                <button type="button" class="btn-secondary" onclick="loadTasks()">Refresh List</button>
+            </div>
+        </form>
+        <p id="taskCount" style="margin-top: 12px; font-weight: bold; color: #555;">Loaded 0 task(s).</p>
+    </div>
+
+    <div class="card">
+        <div id="taskList">No tasks yet.</div>
+    </div>
+
+    <div class="card">
+        <h2>API Reference</h2>
+        <p style="margin-bottom: 20px;">Base URL: <code>http://localhost:5000</code></p>
+
+        <div class="api-route">
+            <div class="route-header"><span class="badge badge-get">GET</span> <strong>/health</strong></div>
+            <div class="route-detail">Service health status.</div>
+            <div class="route-detail"><strong>Path params:</strong> none</div>
+            <div class="route-detail"><strong>Query params:</strong> none</div>
+            <div class="route-detail"><strong>Body:</strong> none</div>
+            <div class="route-detail"><strong>200:</strong> <code>{"status":"ok"}</code></div>
+            <pre>curl http://localhost:5000/health</pre>
+        </div>
+
+        <div class="api-route">
+            <div class="route-header"><span class="badge badge-get">GET</span> <strong>/info</strong></div>
+            <div class="route-detail">App info and runtime config.</div>
+            <div class="route-detail"><strong>Path params:</strong> none</div>
+            <div class="route-detail"><strong>Query params:</strong> none</div>
+            <div class="route-detail"><strong>Body:</strong> none</div>
+            <div class="route-detail"><strong>200:</strong> <code>{"app":"Task Manager API","version":"1.0.0","max_tasks":100}</code></div>
+            <pre>curl http://localhost:5000/info</pre>
+        </div>
+
+        <div class="api-route">
+            <div class="route-header"><span class="badge badge-get">GET</span> <strong>/tasks</strong></div>
+            <div class="route-detail">List all tasks.</div>
+            <div class="route-detail"><strong>Path params:</strong> none</div>
+            <div class="route-detail"><strong>Query params:</strong> none</div>
+            <div class="route-detail"><strong>Body:</strong> none</div>
+            <div class="route-detail"><strong>200:</strong> <code>[{...task}]</code></div>
+            <pre>curl http://localhost:5000/tasks</pre>
+        </div>
+
+        <div class="api-route">
+            <div class="route-header"><span class="badge badge-get">GET</span> <strong>/tasks/{id}</strong></div>
+            <div class="route-detail">Get one task by ID.</div>
+            <div class="route-detail"><strong>Path params:</strong> <code>id</code> (integer)</div>
+            <div class="route-detail"><strong>Query params:</strong> none</div>
+            <div class="route-detail"><strong>Body:</strong> none</div>
+            <div class="route-detail"><strong>200:</strong> <code>{...task}</code></div>
+            <div class="route-detail"><strong>404:</strong> <code>{"error":"Task not found"}</code></div>
+            <pre>curl http://localhost:5000/tasks/1</pre>
+        </div>
+
+        <div class="api-route">
+            <div class="route-header"><span class="badge badge-post">POST</span> <strong>/tasks</strong></div>
+            <div class="route-detail">Create a new task.</div>
+            <div class="route-detail"><strong>Path params:</strong> none</div>
+            <div class="route-detail"><strong>Query params:</strong> none</div>
+            <div class="route-detail"><strong>Body:</strong> <code>{"title":"string","description":"string(optional)"}</code></div>
+            <div class="route-detail"><strong>201:</strong> <code>{...created_task}</code></div>
+            <div class="route-detail"><strong>400:</strong> <code>{"error":"'title' is required"}</code></div>
+            <div class="route-detail"><strong>409:</strong> <code>{"error":"Task limit (N) reached"}</code></div>
+            <pre>curl -X POST http://localhost:5000/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Buy milk","description":"2 litres"}'</pre>
+        </div>
+
+        <div class="api-route">
+            <div class="route-header"><span class="badge badge-put">PUT</span> <strong>/tasks/{id}</strong></div>
+            <div class="route-detail">Not implemented in v1.0.0 (use PATCH for partial update).</div>
+            <div class="route-detail"><strong>Status:</strong> endpoint not available</div>
+        </div>
+
+        <div class="api-route">
+            <div class="route-header"><span class="badge badge-patch">PATCH</span> <strong>/tasks/{id}</strong></div>
+            <div class="route-detail">Update done/undone state of task.</div>
+            <div class="route-detail"><strong>Path params:</strong> <code>id</code> (integer)</div>
+            <div class="route-detail"><strong>Query params:</strong> none</div>
+            <div class="route-detail"><strong>Body:</strong> <code>{"done":true|false}</code></div>
+            <div class="route-detail"><strong>200:</strong> <code>{...updated_task}</code></div>
+            <div class="route-detail"><strong>400:</strong> <code>{"error":"'done' field is required"}</code></div>
+            <div class="route-detail"><strong>404:</strong> <code>{"error":"Task not found"}</code></div>
+            <pre>curl -X PATCH http://localhost:5000/tasks/1 \
+  -H "Content-Type: application/json" \
+  -d '{"done":true}'</pre>
+        </div>
+
+        <div class="api-route">
+            <div class="route-header"><span class="badge badge-delete">DELETE</span> <strong>/tasks/{id}</strong></div>
+            <div class="route-detail">Delete a task by ID.</div>
+            <div class="route-detail"><strong>Path params:</strong> <code>id</code> (integer)</div>
+            <div class="route-detail"><strong>Query params:</strong> none</div>
+            <div class="route-detail"><strong>Body:</strong> none</div>
+            <div class="route-detail"><strong>200:</strong> <code>{"message":"Task deleted","task":{...}}</code></div>
+            <div class="route-detail"><strong>404:</strong> <code>{"error":"Task not found"}</code></div>
+            <pre>curl -X DELETE http://localhost:5000/tasks/1</pre>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const baseUrl = window.location.origin;
+
+    async function loadTasks() {
+        try {
+            const res = await fetch(`${baseUrl}/tasks`);
+            const tasks = await res.json();
+            const container = document.getElementById('taskList');
+            document.getElementById('taskCount').innerText = `Loaded ${tasks.length} task(s).`;
+            
+            if (tasks.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; padding: 10px;">No tasks yet.</div>';
+                return;
+            }
+            
+            container.innerHTML = tasks.map(t => `
+                <div class="task-item">
+                    <div>
+                        <div class="task-title">#${t.id} ${t.title}</div>
+                        <div class="task-desc">${t.description || 'No description provided.'}</div>
+                        <div class="task-meta">done: ${t.done} | created_at: ${t.created_at}</div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn-success" onclick="toggleTask(${t.id}, ${!t.done})">
+                            ${t.done ? 'Mark Undone' : 'Mark Done'}
+                        </button>
+                        <button class="btn-danger" onclick="deleteTask(${t.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) {
+            console.error("Error loading tasks:", err);
+        }
+    }
+
+    document.getElementById('taskForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('taskTitle').value;
+        const description = document.getElementById('taskDesc').value;
+        
+        await fetch(`${baseUrl}/tasks`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, description })
+        });
+        
+        document.getElementById('taskTitle').value = '';
+        document.getElementById('taskDesc').value = '';
+        loadTasks();
+    });
+
+    async function toggleTask(id, doneState) {
+        await fetch(`${baseUrl}/tasks/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ done: doneState })
+        });
+        loadTasks();
+    }
+
+    async function deleteTask(id) {
+        await fetch(`${baseUrl}/tasks/${id}`, { method: 'DELETE' });
+        loadTasks();
+    }
+
+    // İlk açılışta siyahını yükləyirik
+    window.onload = loadTasks;
+</script>
+</body>
+</html>
